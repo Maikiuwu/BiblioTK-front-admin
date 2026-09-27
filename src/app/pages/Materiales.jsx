@@ -5,7 +5,15 @@ import {
 	Plus,
 	Trash,
 } from "@phosphor-icons/react";
-import { Alert, Button, Checkbox, cn, Dialog, Select, TextField } from "bibliotk-ui";
+import {
+	Alert,
+	Button,
+	Checkbox,
+	cn,
+	Dialog,
+	inputClasses,
+	TextField,
+} from "bibliotk-ui";
 import { useCallback, useEffect, useState } from "react";
 import {
 	createMaterial,
@@ -63,6 +71,30 @@ function validarMaterial(formData) {
 	}
 
 	return null;
+}
+
+function MaterialTypeSelect({ value, onChange, error }) {
+	return (
+		<div className="grid content-start gap-2">
+			<label htmlFor="tipoMaterial" className="text-[13px] font-semibold text-pine-900">
+				Tipo
+			</label>
+			<select
+				id="tipoMaterial"
+				name="tipoMaterial"
+				aria-invalid={error ? true : undefined}
+				className={inputClasses}
+				value={value}
+				onChange={onChange}
+				required
+			>
+				<option value="LIBRO">Libro</option>
+				<option value="REVISTA">Revista</option>
+				<option value="NOVELA">Novela</option>
+			</select>
+			{error && <p className="text-[13px] font-medium text-clay-600">{error}</p>}
+		</div>
+	);
 }
 
 function MaterialFormDialog({ open, mode, material, onClose, onSaved }) {
@@ -160,19 +192,11 @@ function MaterialFormDialog({ open, mode, material, onClose, onSaved }) {
 					onChange={handleChange}
 					error={errorFor("autor")}
 				/>
-				<Select
-					id="tipoMaterial"
-					name="tipoMaterial"
-					label="Tipo"
-					required
+				<MaterialTypeSelect
 					value={formData.tipoMaterial}
 					onChange={handleChange}
 					error={errorFor("tipoMaterial")}
-				>
-					<option value="LIBRO">Libro</option>
-					<option value="REVISTA">Revista</option>
-					<option value="NOVELA">Novela</option>
-				</Select>
+				/>
 				<TextField
 					id="editorial"
 					name="editorial"
