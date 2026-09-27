@@ -1,6 +1,6 @@
 const materialesUrl =
 	import.meta.env.VITE_MATERIALES_URL ??
-	"http://localhost:3004/MaterialesBiblioTK/Materiales";
+	"http://localhost:3003/MaterialesBiblioTK/Materiales";
 
 async function requestMateriales(path, options, fallbackMessage) {
 	let response;
