@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@phosphor-icons/react"],
     },
     server: {
-      port: Number(env.VITE_PORT) || 5173,
+      port: Number(env.VITE_PORT) || 5174,
     },
   }
 })
