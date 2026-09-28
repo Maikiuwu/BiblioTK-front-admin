@@ -41,7 +41,7 @@ export async function getMaterial(id) {
 	const data = await requestMateriales(
 		`/${id}`,
 		{},
-		"No se pudo obtener el material.",
+	"No se pudo obtener el material.",
 	);
 	return data.material;
 }

@@ -1,2 +1,13 @@
 @import "tailwindcss";
 @import "bibliotk-ui/theme.css";
+
+#root > .min-h-dvh > header {
+	padding: 0;
+	background: none;
+}
+
+#root > .min-h-dvh > header > div {
+	max-width: none;
+	margin: 0;
+	border-radius: 0;
+}
