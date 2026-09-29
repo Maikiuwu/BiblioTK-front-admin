@@ -1,2 +1,18 @@
 @import "tailwindcss";
 @import "bibliotk-ui/theme.css";
+
+/* Con cinco secciones la barra no cabe en pantallas angostas: solo ella cede espacio
+   (se desliza de lado); el logo y "Cerrar sesión" mantienen su tamaño */
+#root > .min-h-dvh > header nav {
+	min-width: 0;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+#root > .min-h-dvh > header > div > :not(nav) {
+	flex-shrink: 0;
+}
+
+#root > .min-h-dvh > header button {
+	white-space: nowrap;
+}
