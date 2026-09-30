@@ -1,17 +1,16 @@
-import {
-	ArrowsClockwise,
-	Books,
-	PencilSimple,
-	Plus,
-	Trash,
-	UploadSimple,
-} from "@phosphor-icons/react";
+import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
+import { Books } from "@phosphor-icons/react/Books";
+import { PencilSimple } from "@phosphor-icons/react/PencilSimple";
+import { Plus } from "@phosphor-icons/react/Plus";
+import { Trash } from "@phosphor-icons/react/Trash";
+import { UploadSimple } from "@phosphor-icons/react/UploadSimple";
 import {
 	Alert,
 	Button,
 	buttonClasses,
 	Checkbox,
 	cn,
+	CoverImage,
 	Dialog,
 	inputClasses,
 	TextField,
@@ -23,7 +22,6 @@ import {
 	listMateriales,
 	updateMaterial,
 } from "../../service/MaterialesService.js";
-import CoverImage from "../components/CoverImage.jsx";
 import { createMaterialDto } from "../dto/material.dto.js";
 
 const tiposValidos = ["LIBRO", "REVISTA", "NOVELA"];

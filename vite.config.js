@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: Number(env.VITE_PORT) || 5174,
+      // Transforma el arranque apenas se levanta el servidor, antes de que llegue el navegador
+      warmup: {
+        clientFiles: ['./src/main.jsx', './src/app/pages/*.jsx'],
+      },
     },
   }
 })

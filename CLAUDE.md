@@ -3,7 +3,10 @@
 Parte del sistema BiblioTK (ver `../CLAUDE.md`). Gestión del material bibliográfico, de los préstamos y de los reportes para el rol `admin` — ojo, este rol **no** es el "admin" del sistema viejo (ese ahora es `superadmin`, ver `../BiblioTK-front-superadmin`); acá `admin` es el bibliotecario. React 19 + React Router 7 + Vite 8 + Tailwind CSS 4.
 
 - **Arranque:** `npm run dev` → http://localhost:5174 (`VITE_PORT` si hay `.env.local`)
-- **Librería de interfaz:** `bibliotk-ui` `^0.1.0` **de npm** (repo `UiBiblioTK`). En esta máquina `node_modules/bibliotk-ui` todavía es un enlace a `../BiblioTK-ui` de una instalación vieja; con `npm install` se reemplaza por la de npm. Usar solo lo que exporta npm (no `Select`, `Footer` ni `ErrorBoundary`).
+- **Librería de interfaz:** `bibliotk-ui` `^0.2.0` **de npm** (repo `UiBiblioTK`), con JS y CSS ya compilados. `CoverImage` viene de ahí.
+- **CSS:** `src/app/styles/globals.css`, enlazado con `<link>` en `index.html` (no se importa desde `main.jsx`): fuentes + `bibliotk-ui/styles.css` + solo `theme` y `utilities` de Tailwind. Ver `../UiBiblioTK/CLAUDE.md`.
+- **Íconos:** un import por ícono (`@phosphor-icons/react/Books`); ESLint prohíbe el paquete entero. `IconContext` sale de `@phosphor-icons/react/dist/lib/context`.
+- **Carga:** `Home` va en el paquete inicial; Materiales, Préstamos, Reportes y Perfil se cargan con `React.lazy` y se precargan cuando el navegador queda libre. La sesión se pide al cargar `App.jsx`.
 - **Acceso:** solo rol `admin`. Sin sesión o con otro rol, redirige a la landing con `?motivo=sesion_expirada|sin_permiso` (URL armada con `new URL(ruta, VITE_LOGIN_APP_URL)`).
 - **Backends:** InicioSesion (3001), Materiales (3003), Préstamos (3005) y Perfil (3002).
 
@@ -13,13 +16,13 @@ Parte del sistema BiblioTK (ver `../CLAUDE.md`). Gestión del material bibliogr�
 src/
   app/
     pages/
-      App.jsx         # Rutas, guarda de rol "admin", PanelLayout (Resumen, Materiales, Préstamos, Reportes, Mi perfil)
+      App.jsx         # Rutas (secciones con React.lazy), guarda de rol "admin", PanelLayout (Resumen, Materiales, Préstamos, Reportes, Mi perfil)
       Home.jsx         # /HomeAdmin — Material bibliográfico, Préstamos, Mi perfil (un solo botón) y Reportes
       Materiales.jsx   # /materiales — tabla con miniaturas + alta/edición (con portada)/borrado
       Prestamos.jsx    # /prestamos — tabla de todos los préstamos (tabla reportes), filtros y "Marcar devuelto"
-      Reportes.jsx     # /reportes — filtros (estado, fechas), resumen, vista previa y "Descargar PDF"
+      Reportes.jsx     # /reportes — filtros (estado, fechas), resumen, vista previa y "Descargar PDF" (export con nombre: `Reportes`)
       Profile.jsx      # /perfil — "Editar mis datos" + "Eliminar mi cuenta" (copia de la del lector)
-    components/CoverImage.jsx  # Portada con respaldo remota → local (copia igual en front-user y front)
+    styles/globals.css         # Hoja única (se enlaza desde index.html)
     dto/material.dto.js        # Arma el FormData (datos + portada)
     dto/updateProfile.dto.js
     utils/userValidation.js    # Reglas del perfil sin dependencias (el lector usa Zod)
@@ -47,6 +50,5 @@ Mismo esquema que el lector: un solo botón "Editar perfil" en el inicio y, dent
 
 ## Pendientes conocidos
 
-- `CoverImage` y los ajustes de la cabecera (barra deslizable en pantallas angostas, en `globals.css`) deberían pasar a `UiBiblioTK`.
 - No hay confirmación de contraseña al borrar un material (a diferencia de borrar una cuenta): ya lo protege `verificarRolAdmin` en el backend.
 - `README.md` sigue siendo la plantilla por defecto de Vite.

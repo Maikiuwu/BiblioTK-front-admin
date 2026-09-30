@@ -1,4 +1,6 @@
-import { ArrowLeft, ArrowsClockwise, Trash } from "@phosphor-icons/react";
+import { ArrowLeft } from "@phosphor-icons/react/ArrowLeft";
+import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
+import { Trash } from "@phosphor-icons/react/Trash";
 import {
 	Alert,
 	Button,

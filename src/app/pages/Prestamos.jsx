@@ -1,15 +1,14 @@
-import {
-	ArrowCounterClockwise,
-	ArrowsClockwise,
-	ArrowsLeftRight,
-	FilePdf,
-	XCircle,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/ArrowCounterClockwise";
+import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
+import { ArrowsLeftRight } from "@phosphor-icons/react/ArrowsLeftRight";
+import { FilePdf } from "@phosphor-icons/react/FilePdf";
+import { XCircle } from "@phosphor-icons/react/XCircle";
 import {
 	Alert,
 	Button,
 	buttonClasses,
 	cn,
+	CoverImage,
 	Dialog,
 	TextField,
 } from "bibliotk-ui";
@@ -21,7 +20,6 @@ import {
 	devolverPrestamo,
 	listReportes,
 } from "../../service/PrestamosService.js";
-import CoverImage from "../components/CoverImage.jsx";
 
 const cardClasses =
 	"rounded-[28px] bg-sand-50 shadow-[inset_0_0_0_1px_var(--color-sand-200)]";

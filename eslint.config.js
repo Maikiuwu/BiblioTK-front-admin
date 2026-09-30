@@ -17,5 +17,13 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [{
+          name: '@phosphor-icons/react',
+          message: 'Importa cada ícono desde su módulo (@phosphor-icons/react/<Nombre>): el paquete completo pesa varios MB y frena el arranque en desarrollo.',
+        }],
+      }],
+    },
   },
 ])

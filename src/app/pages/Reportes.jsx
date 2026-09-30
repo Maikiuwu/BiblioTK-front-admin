@@ -1,4 +1,5 @@
-import { ArrowsClockwise, FilePdf } from "@phosphor-icons/react";
+import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
+import { FilePdf } from "@phosphor-icons/react/FilePdf";
 import {
 	Alert,
 	Button,
@@ -64,7 +65,7 @@ function EstadoSelect({ value, onChange }) {
 	);
 }
 
-function Reportes() {
+export function Reportes() {
 	const [estado, setEstado] = useState("");
 	const [desde, setDesde] = useState("");
 	const [hasta, setHasta] = useState("");
@@ -267,4 +268,3 @@ function Reportes() {
 	);
 }
 
-export default Reportes;

@@ -1,18 +1,14 @@
-@import "tailwindcss";
+/* Hoja única de la app: se enlaza desde index.html (no se importa desde JS) */
+@layer theme, base, components, utilities;
+
+/* Fuentes: el tema de bibliotk-ui las nombra, pero no las incluye */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/geist";
+
+/* CSS ya compilado de bibliotk-ui: reset, tokens, estilos base y componentes */
+@import "bibliotk-ui/styles.css";
+
+/* Tailwind solo genera las utilidades de esta app (el reset ya viene en la hoja de la librería) */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 @import "bibliotk-ui/theme.css";
-
-/* Con cinco secciones la barra no cabe en pantallas angostas: solo ella cede espacio
-   (se desliza de lado); el logo y "Cerrar sesión" mantienen su tamaño */
-#root > .min-h-dvh > header nav {
-	min-width: 0;
-	overflow-x: auto;
-	scrollbar-width: none;
-}
-
-#root > .min-h-dvh > header > div > :not(nav) {
-	flex-shrink: 0;
-}
-
-#root > .min-h-dvh > header button {
-	white-space: nowrap;
-}
