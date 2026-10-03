@@ -46,30 +46,24 @@ export async function getMaterial(id) {
 	return data.material;
 }
 
+// materialData es un FormData (datos + portada opcional en "imagen"): sin Content-Type a mano,
+// el navegador pone el multipart con su boundary. Devuelve { material, aviso }
 export async function createMaterial(materialData) {
 	const data = await requestMateriales(
 		"",
-		{
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(materialData),
-		},
+		{ method: "POST", body: materialData },
 		"No se pudo registrar el material.",
 	);
-	return data.material;
+	return { material: data.material, aviso: data.aviso };
 }
 
 export async function updateMaterial(id, materialData) {
 	const data = await requestMateriales(
 		`/${id}`,
-		{
-			method: "PUT",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(materialData),
-		},
+		{ method: "PUT", body: materialData },
 		"No se pudieron guardar los cambios.",
 	);
-	return data.material;
+	return { material: data.material, aviso: data.aviso };
 }
 
 export async function deleteMaterial(id) {
