@@ -59,7 +59,10 @@ async function revalidarSesion() {
 		if (esSesionDeEstaApp(session)) {
 			document.documentElement.style.visibility = "";
 		} else {
-			window.location.replace(landingUrl("/login?motivo=sin_permiso"));
+			// La sesión sigue viva pero es de otra app (por ejemplo, el superadmin le cambió el rol): a la suya
+			window.location.replace(
+				session?.destino ?? landingUrl("/login?motivo=sin_permiso"),
+			);
 		}
 	} catch {
 		window.location.replace(landingUrl("/login?motivo=sesion_expirada"));

@@ -54,6 +54,7 @@ Mismo esquema que el lector: un solo botón "Editar perfil" en el inicio y, dent
 
 - `src/service/NotificacionesService.js` abre el socket de `NotificacionesBiblioTK` (`/NotificacionesBiblioTK/socket.io`, solo WebSocket) con la cookie de sesión: el servidor decide qué recibe la cuenta, el front no conoce el rol. `VITE_NOTIFICACIONES_URL` (por defecto `http://localhost:3006`; vacía = mismo origen, detrás del gateway).
 - `src/app/hooks/useNotificaciones.js` guarda el historial (20, el que manda el servidor al conectar), los avisos emergentes (máximo 3) y las no leídas (marca "leídas hasta" en `localStorage`, por navegador). Se conecta cuando la sesión ya se validó; si el servidor corta el socket (sesión cerrada en otra pestaña, cuenta borrada), revalida la sesión y vuelve a la landing.
+- Si el servidor corta el socket porque a la cuenta le cambiaron el rol, la revalidación encuentra la sesión viva pero de otra app y la lleva a su `destino` (la app del rol nuevo).
 - `App.jsx` pinta `NotificationCenter`: botón flotante abajo a la derecha con contador, panel con el historial y avisos arriba a la derecha.
 - `NotificationCenter` (y su CSS, dentro de `bibliotk-ui/styles.css`) viene de `bibliotk-ui` ^0.4.0.
 
