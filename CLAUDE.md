@@ -7,7 +7,7 @@ Parte del sistema BiblioTK (ver `../CLAUDE.md`). Gestión del material bibliogr�
 - **CSS:** `src/app/styles/globals.css`, enlazado con `<link>` en `index.html` (no se importa desde `main.jsx`): fuentes + `bibliotk-ui/styles.css` + solo `theme` y `utilities` de Tailwind. Ver `../UiBiblioTK/CLAUDE.md`.
 - **Íconos:** un import por ícono (`@phosphor-icons/react/Books`); ESLint prohíbe el paquete entero. `IconContext` sale de `@phosphor-icons/react/dist/lib/context`.
 - **Carga:** `Home` va en el paquete inicial; Materiales, Préstamos, Reportes y Perfil se cargan con `React.lazy` y se precargan cuando el navegador queda libre. La sesión se pide al cargar `App.jsx`.
-- **Acceso:** solo rol `admin`. Sin sesión o con otro rol, redirige a la landing con `?motivo=sesion_expirada|sin_permiso` (URL armada con `new URL(ruta, VITE_LOGIN_APP_URL)`).
+- **Acceso:** solo cuentas de bibliotecario, pero el front nunca ve el rol: `esSesionDeEstaApp` (`LoginService.js`) compara el origen del `destino` que devuelve `GET /Sesion` (sin caché) con el de esta app. Sin sesión o con una cuenta de otra app se reemplaza (`location.replace`) por la landing con `?motivo=sesion_expirada|sin_permiso` (URL armada con `new URL(ruta, VITE_LOGIN_APP_URL)`); cerrar sesión también usa `replace`. La sesión se vuelve a consultar cada vez que la página vuelve a mostrarse (bfcache con "atrás" o al volver a la pestaña) y la página se oculta al salir. Igual que en `BiblioTK-front-user`.
 - **Backends:** InicioSesion (3001), Materiales (3003), Préstamos (3005) y Perfil (3002).
 
 ## Estructura
@@ -16,7 +16,7 @@ Parte del sistema BiblioTK (ver `../CLAUDE.md`). Gestión del material bibliogr�
 src/
   app/
     pages/
-      App.jsx         # Rutas (secciones con React.lazy), guarda de rol "admin", PanelLayout (Resumen, Materiales, Préstamos, Reportes, Mi perfil)
+      App.jsx         # Rutas (secciones con React.lazy), guarda de sesión, PanelLayout (Resumen, Materiales, Préstamos, Reportes, Mi perfil)
       Home.jsx         # /HomeAdmin — Material bibliográfico, Préstamos, Mi perfil (un solo botón) y Reportes
       Materiales.jsx   # /materiales — tabla con miniaturas + alta/edición (con portada)/borrado
       Prestamos.jsx    # /prestamos — tabla de todos los préstamos (tabla reportes), filtros y "Marcar devuelto"
@@ -27,7 +27,7 @@ src/
     dto/updateProfile.dto.js
     utils/userValidation.js    # Reglas del perfil sin dependencias (el lector usa Zod)
   service/
-    LoginService.js       # getCurrentSession, logoutUser → :3001
+    LoginService.js       # getCurrentSession, esSesionDeEstaApp, logoutUser → :3001
     MaterialesService.js   # listMateriales, getMaterial, createMaterial, updateMaterial, deleteMaterial → :3003
     PrestamosService.js    # listReportes, devolverPrestamo, downloadReportePdf → :3005
     ProfileService.js      # getProfile, updateProfile, deleteAccount → :3002

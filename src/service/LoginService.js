@@ -7,8 +7,10 @@ export async function getCurrentSession() {
 	let response;
 
 	try {
+		// Sin caché: al volver con "atrás", el navegador devolvía la respuesta de una sesión ya cerrada
 		response = await fetch(sessionUrl, {
 			credentials: "include",
+			cache: "no-store",
 		});
 	} catch {
 		throw new Error("No se pudo conectar con el servicio de autenticación.");
@@ -19,6 +21,15 @@ export async function getCurrentSession() {
 	}
 
 	return await response.json();
+}
+
+// La sesión no trae el rol: el servidor dice a qué app va la cuenta (destino) y basta con comparar orígenes
+export function esSesionDeEstaApp(session) {
+	try {
+		return new URL(session?.destino).origin === window.location.origin;
+	} catch {
+		return false;
+	}
 }
 
 export async function logoutUser() {
