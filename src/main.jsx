@@ -7,10 +7,13 @@ import App from "./app/pages/App.jsx";
 
 const iconDefaults = { weight: "bold", size: 18 };
 
+// Detrás del gateway la app vive en una subruta (BASE_URL, por ejemplo "/lector/"); en desarrollo, "/"
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || "/";
+
 createRoot(document.getElementById("root")).render(
 	<StrictMode>
 		<IconContext.Provider value={iconDefaults}>
-			<BrowserRouter>
+			<BrowserRouter basename={basename}>
 				<App />
 			</BrowserRouter>
 		</IconContext.Provider>

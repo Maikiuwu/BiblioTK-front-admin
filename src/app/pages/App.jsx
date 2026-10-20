@@ -40,9 +40,10 @@ const sesionInicial = getCurrentSession().then(
 const LOGIN_URL = import.meta.env.VITE_LOGIN_APP_URL ?? "http://localhost:5172";
 
 // VITE_LOGIN_APP_URL puede venir con "/" final o incluso con "/login": la ruta se resuelve
-// sobre su origen para no terminar en "//login" (que la landing no reconoce)
+// sobre su origen para no terminar en "//login" (que la landing no reconoce). Detrás del gateway
+// es relativa ("/"), así que primero se resuelve contra el origen de esta página
 function landingUrl(ruta) {
-	return new URL(ruta, LOGIN_URL).toString();
+	return new URL(ruta, new URL(LOGIN_URL, window.location.origin)).toString();
 }
 
 // Se le pregunta otra vez al servidor si la sesión sigue viva y es de esta app; si no, a la landing.

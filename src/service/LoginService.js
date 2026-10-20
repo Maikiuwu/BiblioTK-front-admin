@@ -23,10 +23,15 @@ export async function getCurrentSession() {
 	return await response.json();
 }
 
-// La sesión no trae el rol: el servidor dice a qué app va la cuenta (destino) y basta con comparar orígenes
+// La sesión no trae el rol: el servidor dice a qué app va la cuenta (destino). Es esta app si
+// coinciden el origen y la subruta (detrás del gateway todas comparten origen: /lector/, /bibliotecario/…)
 export function esSesionDeEstaApp(session) {
 	try {
-		return new URL(session?.destino).origin === window.location.origin;
+		const destino = new URL(session?.destino);
+		return (
+			destino.origin === window.location.origin &&
+			destino.pathname.startsWith(import.meta.env.BASE_URL)
+		);
 	} catch {
 		return false;
 	}

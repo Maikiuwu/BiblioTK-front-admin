@@ -3,7 +3,8 @@
 Parte del sistema BiblioTK (ver `../CLAUDE.md`). Gestión del material bibliográfico, de los préstamos y de los reportes para el rol `admin` — ojo, este rol **no** es el "admin" del sistema viejo (ese ahora es `superadmin`, ver `../BiblioTK-front-superadmin`); acá `admin` es el bibliotecario. React 19 + React Router 7 + Vite 8 + Tailwind CSS 4.
 
 - **Arranque:** `npm run dev` → http://localhost:5174 (`VITE_PORT` si hay `.env.local`)
-- **Librería de interfaz:** `bibliotk-ui` `^0.2.0` **de npm** (repo `UiBiblioTK`), con JS y CSS ya compilados. `CoverImage` viene de ahí.
+- **Docker:** `Dockerfile` en dos etapas (compila con Vite → nginx sin root con `nginx.conf`). Las `VITE_*` quedan fijas al compilar: por defecto, detrás del gateway de `../InfraBiblioTK` (rutas relativas, un solo origen) y con la subruta `/bibliotecario/`. `VITE_BASE` es esa subruta (`base` de Vite y `basename` del router; en desarrollo, `/`).
+- **Librería de interfaz:** `bibliotk-ui` `^0.3.0` **de npm** (repo `UiBiblioTK`), con JS y CSS ya compilados. `CoverImage` viene de ahí.
 - **CSS:** `src/app/styles/globals.css`, enlazado con `<link>` en `index.html` (no se importa desde `main.jsx`): fuentes + `bibliotk-ui/styles.css` + solo `theme` y `utilities` de Tailwind. Ver `../UiBiblioTK/CLAUDE.md`.
 - **Íconos:** un import por ícono (`@phosphor-icons/react/Books`); ESLint prohíbe el paquete entero. `IconContext` sale de `@phosphor-icons/react/dist/lib/context`.
 - **Carga:** `Home` va en el paquete inicial; Materiales, Préstamos, Reportes y Perfil se cargan con `React.lazy` y se precargan cuando el navegador queda libre. La sesión se pide al cargar `App.jsx`.
