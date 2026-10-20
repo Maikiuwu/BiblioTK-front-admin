@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { PanelLayout } from "bibliotk-ui";
+import { NotificationCenter, PanelLayout } from "bibliotk-ui";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import {
@@ -7,7 +7,6 @@ import {
 	getCurrentSession,
 	logoutUser,
 } from "../../service/LoginService.js";
-import NotificationCenter from "../components/NotificationCenter.jsx";
 import { useNotificaciones } from "../hooks/useNotificaciones.js";
 
 import Home from "./Home.jsx";
