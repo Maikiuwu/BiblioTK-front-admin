@@ -28,12 +28,13 @@ src/
     utils/userValidation.js    # Reglas del perfil sin dependencias (el lector usa Zod)
   service/
     LoginService.js       # getCurrentSession, esSesionDeEstaApp, logoutUser → :3001
+    NotificacionesService.js # conectarNotificaciones → :3006 (Socket.IO)
     MaterialesService.js   # listMateriales, getMaterial, createMaterial, updateMaterial, deleteMaterial → :3003
     PrestamosService.js    # listReportes, devolverPrestamo, downloadReportePdf → :3005
     ProfileService.js      # getProfile, updateProfile, deleteAccount → :3002
 ```
 
-Variables opcionales (`.env.local`): `VITE_PORT`, `VITE_LOGIN_APP_URL`, `VITE_SESSION_URL`, `VITE_LOGOUT_URL`, `VITE_MATERIALES_URL`, `VITE_PRESTAMOS_URL`, `VITE_PROFILE_URL`.
+Variables opcionales (`.env.local`): `VITE_PORT`, `VITE_NOTIFICACIONES_URL`, `VITE_LOGIN_APP_URL`, `VITE_SESSION_URL`, `VITE_LOGOUT_URL`, `VITE_MATERIALES_URL`, `VITE_PRESTAMOS_URL`, `VITE_PROFILE_URL`.
 
 ## Préstamos y reportes
 
@@ -47,6 +48,13 @@ El formulario se monta con `key` en cada apertura (sin efectos de reinicio). La 
 ## Perfil
 
 Mismo esquema que el lector: un solo botón "Editar perfil" en el inicio y, dentro de `/perfil`, editar datos o eliminar la cuenta. El backend solo deja eliminarla si queda otro bibliotecario.
+
+## Notificaciones en tiempo real
+
+- `src/service/NotificacionesService.js` abre el socket de `NotificacionesBiblioTK` (`/NotificacionesBiblioTK/socket.io`, solo WebSocket) con la cookie de sesión: el servidor decide qué recibe la cuenta, el front no conoce el rol. `VITE_NOTIFICACIONES_URL` (por defecto `http://localhost:3006`; vacía = mismo origen, detrás del gateway).
+- `src/app/hooks/useNotificaciones.js` guarda el historial (20, el que manda el servidor al conectar), los avisos emergentes (máximo 3) y las no leídas (marca "leídas hasta" en `localStorage`, por navegador). Se conecta cuando la sesión ya se validó; si el servidor corta el socket (sesión cerrada en otra pestaña, cuenta borrada), revalida la sesión y vuelve a la landing.
+- `App.jsx` pinta `NotificationCenter`: botón flotante abajo a la derecha con contador, panel con el historial y avisos arriba a la derecha.
+- ⚠️ `src/app/components/NotificationCenter.jsx` y su `.css` son una **copia** de `bibliotk-ui` 0.4.0, que todavía no está publicada. Al publicarla: `npm install bibliotk-ui@^0.4.0`, importar `NotificationCenter` desde `"bibliotk-ui"` en `App.jsx`, borrar la copia y quitar su `@import` de `globals.css`.
 
 ## Pendientes conocidos
 

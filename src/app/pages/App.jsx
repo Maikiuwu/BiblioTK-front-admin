@@ -7,6 +7,8 @@ import {
 	getCurrentSession,
 	logoutUser,
 } from "../../service/LoginService.js";
+import NotificationCenter from "../components/NotificationCenter.jsx";
+import { useNotificaciones } from "../hooks/useNotificaciones.js";
 
 import Home from "./Home.jsx";
 
@@ -43,6 +45,29 @@ function landingUrl(ruta) {
 	return new URL(ruta, LOGIN_URL).toString();
 }
 
+// Se le pregunta otra vez al servidor si la sesión sigue viva y es de esta app; si no, a la landing.
+// La usan el regreso con "atrás" o a la pestaña y el aviso de que el servidor cortó las notificaciones
+let revisandoSesion = false;
+
+async function revalidarSesion() {
+	if (revisandoSesion) return;
+	revisandoSesion = true;
+
+	try {
+		const session = await getCurrentSession();
+
+		if (esSesionDeEstaApp(session)) {
+			document.documentElement.style.visibility = "";
+		} else {
+			window.location.replace(landingUrl("/login?motivo=sin_permiso"));
+		}
+	} catch {
+		window.location.replace(landingUrl("/login?motivo=sesion_expirada"));
+	} finally {
+		revisandoSesion = false;
+	}
+}
+
 function getSessionUser(session) {
 	return session?.user ?? session ?? null;
 }
@@ -50,6 +75,8 @@ function getSessionUser(session) {
 function ProtectedApp() {
 	const [user, setUser] = useState(null);
 	const [status, setStatus] = useState("loading");
+	// Notificaciones en tiempo real: se conectan cuando la sesión ya se validó
+	const centro = useNotificaciones(status === "ready", revalidarSesion);
 
 	useEffect(() => {
 		let isActive = true;
@@ -75,27 +102,6 @@ function ProtectedApp() {
 		// Con "atrás" el navegador puede mostrar la página tal como quedó (bfcache) sin volver a pedir
 		// la sesión, y otra pestaña pudo cerrarla: cada vez que la página vuelve a verse se le pregunta
 		// al servidor. Al salir se oculta, para que no se alcance a ver si la sesión ya no existe
-		let revisando = false;
-
-		async function revalidarSesion() {
-			if (revisando) return;
-			revisando = true;
-
-			try {
-				const session = await getCurrentSession();
-
-				if (esSesionDeEstaApp(session)) {
-					document.documentElement.style.visibility = "";
-				} else {
-					window.location.replace(landingUrl("/login?motivo=sin_permiso"));
-				}
-			} catch {
-				window.location.replace(landingUrl("/login?motivo=sesion_expirada"));
-			} finally {
-				revisando = false;
-			}
-		}
-
 		function ocultarAlSalir() {
 			document.documentElement.style.visibility = "hidden";
 		}
@@ -154,38 +160,49 @@ function ProtectedApp() {
 	if (status !== "ready") return null;
 
 	return (
-		<Routes>
-			<Route
-				element={
-					<PanelLayout
-						navItems={[
-							{ to: "/HomeAdmin", label: "Resumen", end: true },
-							{ to: "/materiales", label: "Materiales" },
-							{ to: "/prestamos", label: "Préstamos" },
-							{ to: "/reportes", label: "Reportes" },
-							{ to: "/perfil", label: "Mi perfil" },
-						]}
-						homePath="/HomeAdmin"
-						userLabel={user?.email ?? user?.correo}
-						onLogout={handleLogout}
-					>
-						<Suspense fallback={null}>
-							<Outlet />
-						</Suspense>
-					</PanelLayout>
-				}
-			>
-				<Route path="/HomeAdmin" element={<Home />} />
-				<Route path="/materiales" element={<Materiales />} />
-				<Route path="/prestamos" element={<Prestamos />} />
-				<Route path="/reportes" element={<Reportes />} />
+		<>
+			<Routes>
 				<Route
-					path="/perfil"
-					element={<Profile onAccountDeleted={handleAccountDeleted} />}
-				/>
-			</Route>
-			<Route path="*" element={<Navigate to="/HomeAdmin" replace />} />
-		</Routes>
+					element={
+						<PanelLayout
+							navItems={[
+								{ to: "/HomeAdmin", label: "Resumen", end: true },
+								{ to: "/materiales", label: "Materiales" },
+								{ to: "/prestamos", label: "Préstamos" },
+								{ to: "/reportes", label: "Reportes" },
+								{ to: "/perfil", label: "Mi perfil" },
+							]}
+							homePath="/HomeAdmin"
+							userLabel={user?.email ?? user?.correo}
+							onLogout={handleLogout}
+						>
+							<Suspense fallback={null}>
+								<Outlet />
+							</Suspense>
+						</PanelLayout>
+					}
+				>
+					<Route path="/HomeAdmin" element={<Home />} />
+					<Route path="/materiales" element={<Materiales />} />
+					<Route path="/prestamos" element={<Prestamos />} />
+					<Route path="/reportes" element={<Reportes />} />
+					<Route
+						path="/perfil"
+						element={<Profile onAccountDeleted={handleAccountDeleted} />}
+					/>
+				</Route>
+				<Route path="*" element={<Navigate to="/HomeAdmin" replace />} />
+			</Routes>
+			<NotificationCenter
+				notifications={centro.notificaciones}
+				unreadCount={centro.sinLeer}
+				readUntil={centro.leidasHasta}
+				toasts={centro.avisos}
+				onDismissToast={centro.descartarAviso}
+				onOpen={centro.marcarLeidas}
+				status={centro.estado}
+			/>
+		</>
 	);
 }
 
