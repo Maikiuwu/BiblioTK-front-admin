@@ -1,7 +1,10 @@
 import { ArrowCounterClockwise } from "@phosphor-icons/react/ArrowCounterClockwise";
 import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
 import { ArrowsLeftRight } from "@phosphor-icons/react/ArrowsLeftRight";
+import { CheckCircle } from "@phosphor-icons/react/CheckCircle";
 import { FilePdf } from "@phosphor-icons/react/FilePdf";
+import { HourglassMedium } from "@phosphor-icons/react/HourglassMedium";
+import { Prohibit } from "@phosphor-icons/react/Prohibit";
 import { XCircle } from "@phosphor-icons/react/XCircle";
 import {
 	Alert,
@@ -16,15 +19,21 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listMateriales } from "../../service/MaterialesService.js";
 import {
+	aprobarPrestamo,
 	cancelarPrestamo,
 	devolverPrestamo,
 	listReportes,
+	rechazarPrestamo,
 } from "../../service/PrestamosService.js";
 
 const cardClasses =
 	"rounded-[28px] bg-sand-50 shadow-[inset_0_0_0_1px_var(--color-sand-200)]";
 
 const estados = {
+	SOLICITADO: {
+		etiqueta: "Por aprobar",
+		clase: "bg-honey-100 text-honey-700 shadow-[inset_0_0_0_1px_rgb(168_112_44/0.2)]",
+	},
 	ACTIVO: { etiqueta: "Activo", clase: "bg-pine-100 text-pine-800" },
 	VENCIDO: {
 		etiqueta: "Vencido",
@@ -33,17 +42,35 @@ const estados = {
 	DEVUELTO: { etiqueta: "Devuelto", clase: "bg-sand-200 text-ink-soft" },
 	CANCELADO: {
 		etiqueta: "Cancelado",
-		clase: "bg-honey-100 text-honey-700 shadow-[inset_0_0_0_1px_rgb(168_112_44/0.2)]",
+		clase: "bg-sand-200 text-ink-soft shadow-[inset_0_0_0_1px_var(--color-sand-300)]",
+	},
+	RECHAZADO: {
+		etiqueta: "Rechazado",
+		clase: "bg-clay-50 text-clay-700",
 	},
 };
 
 const filtrosEstado = [
 	{ valor: "", etiqueta: "Todos", clave: "total" },
+	{ valor: "SOLICITADO", etiqueta: "Por aprobar", clave: "solicitados" },
 	{ valor: "ACTIVO", etiqueta: "Activos", clave: "activos" },
 	{ valor: "VENCIDO", etiqueta: "Vencidos", clave: "vencidos" },
 	{ valor: "DEVUELTO", etiqueta: "Devueltos", clave: "devueltos" },
 	{ valor: "CANCELADO", etiqueta: "Cancelados", clave: "cancelados" },
+	{ valor: "RECHAZADO", etiqueta: "Rechazados", clave: "rechazados" },
 ];
+
+// Nunca se aprobó (sigue esperando, se rechazó o el lector la canceló antes): la fecha de la
+// columna "Prestado" es la de la solicitud
+function fueSolicitud(reporte) {
+	return (
+		reporte.estado === "SOLICITADO" ||
+		reporte.estado === "RECHAZADO" ||
+		(reporte.estado === "CANCELADO" &&
+			Boolean(reporte.fechaSolicitud) &&
+			!reporte.fechaRespuesta)
+	);
+}
 
 const canceladoPor = {
 	usuario: "por el usuario",
@@ -73,10 +100,12 @@ function normalizar(texto) {
 function resumir(reportes) {
 	return {
 		total: reportes.length,
+		solicitados: reportes.filter((reporte) => reporte.estado === "SOLICITADO").length,
 		activos: reportes.filter((reporte) => reporte.estado === "ACTIVO").length,
 		vencidos: reportes.filter((reporte) => reporte.estado === "VENCIDO").length,
 		devueltos: reportes.filter((reporte) => reporte.estado === "DEVUELTO").length,
 		cancelados: reportes.filter((reporte) => reporte.estado === "CANCELADO").length,
+		rechazados: reportes.filter((reporte) => reporte.estado === "RECHAZADO").length,
 	};
 }
 
@@ -149,6 +178,99 @@ function DevolucionDialog({ reporte, onClose, onDevuelto }) {
 	);
 }
 
+// Aprobar confirma que el libro está listo para entregar: el lector recibe el aviso con el
+// lugar de recogida y desde ese momento corren los días del préstamo
+function AprobacionDialog({ reporte, onClose, onAprobado }) {
+	const [error, setError] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	async function handleConfirm() {
+		setError("");
+		setIsSubmitting(true);
+
+		try {
+			onAprobado(await aprobarPrestamo(reporte.prestamoId));
+		} catch (submitError) {
+			setError(submitError.message);
+			setIsSubmitting(false);
+		}
+	}
+
+	return (
+		<Dialog
+			open
+			onClose={onClose}
+			dismissible={!isSubmitting}
+			icon={<CheckCircle aria-hidden="true" className="size-6" />}
+			title="¿Aprobar este préstamo?"
+			description={`${reporte.usuarioNombre ?? "El lector"} podrá recoger «${reporte.materialTitulo}» y le avisaremos de inmediato. El plazo de devolución empieza a contar desde hoy.`}
+		>
+			<div className="grid gap-5">
+				{error && <Alert tone="error">{error}</Alert>}
+				<div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+					<Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+						Volver
+					</Button>
+					<Button loading={isSubmitting} onClick={handleConfirm}>
+						{isSubmitting ? "Aprobando..." : "Aprobar préstamo"}
+					</Button>
+				</div>
+			</div>
+		</Dialog>
+	);
+}
+
+function RechazoDialog({ reporte, onClose, onRechazado }) {
+	const [motivo, setMotivo] = useState("");
+	const [error, setError] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	async function handleSubmit(event) {
+		event.preventDefault();
+		setError("");
+		setIsSubmitting(true);
+
+		try {
+			onRechazado(await rechazarPrestamo(reporte.prestamoId, motivo.trim()));
+		} catch (submitError) {
+			setError(submitError.message);
+			setIsSubmitting(false);
+		}
+	}
+
+	return (
+		<Dialog
+			open
+			onClose={onClose}
+			dismissible={!isSubmitting}
+			tone="danger"
+			icon={<Prohibit aria-hidden="true" className="size-6" />}
+			title="¿Rechazar esta solicitud?"
+			description={`${reporte.usuarioNombre ?? "El lector"} no podrá recoger «${reporte.materialTitulo}» y el material vuelve a estar disponible en el catálogo.`}
+		>
+			<form onSubmit={handleSubmit} className="grid gap-5">
+				<TextField
+					id="motivo-rechazo"
+					label="Motivo"
+					hint="Opcional. Se lo mostramos al lector. Por ejemplo: el ejemplar está en reparación."
+					maxLength={255}
+					value={motivo}
+					onChange={(event) => setMotivo(event.target.value)}
+				/>
+				{error && <Alert tone="error">{error}</Alert>}
+				<div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+					<Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+						Volver
+					</Button>
+					<Button type="submit" variant="danger" loading={isSubmitting}>
+						{isSubmitting ? "Rechazando..." : "Rechazar solicitud"}
+					</Button>
+				</div>
+			</form>
+		</Dialog>
+	);
+}
+
 // Cancelar sirve cuando el libro nunca se entregó (el lector no vino, fue un error…).
 // Si el lector ya lo tiene, lo que corresponde es registrar la devolución
 function CancelacionDialog({ reporte, onClose, onCancelado }) {
@@ -211,14 +333,28 @@ function TextoCierre({ reporte }) {
 		return `Cancelado el ${fechaCorta(reporte.fechaCancelacion)}`;
 	}
 
+	if (reporte.estado === "RECHAZADO") {
+		return `Rechazado el ${fechaCorta(reporte.fechaRespuesta)}`;
+	}
+
+	if (reporte.estado === "SOLICITADO") {
+		return "Empieza al aprobarlo";
+	}
+
 	return `Antes del ${fechaCorta(reporte.fechaDevolucionEsperada)}`;
 }
 
-function PrestamoRow({ reporte, material, onDevolver, onCancelar }) {
+function PrestamoRow({ reporte, material, onAprobar, onRechazar, onDevolver, onCancelar }) {
 	const abierto = reporte.estado === "ACTIVO" || reporte.estado === "VENCIDO";
+	const solicitado = reporte.estado === "SOLICITADO";
 
 	return (
-		<tr className="border-b border-sand-200 align-top last:border-0">
+		<tr
+			className={cn(
+				"border-b border-sand-200 align-top last:border-0",
+				solicitado && "bg-honey-100/40",
+			)}
+		>
 			<td className="py-3 pr-4">
 				<div className="flex gap-3">
 					<div className="h-14 w-10 shrink-0 overflow-hidden rounded-lg bg-sand-200">
@@ -249,6 +385,9 @@ function PrestamoRow({ reporte, material, onDevolver, onCancelar }) {
 			</td>
 			<td className="py-3 pr-4 text-sm whitespace-nowrap text-ink-soft">
 				{fechaCorta(reporte.fechaPrestamo)}
+				{fueSolicitud(reporte) && (
+					<p className="text-xs text-ink-faint">Solicitud</p>
+				)}
 			</td>
 			<td className="py-3 pr-4 text-sm text-ink-soft">
 				<p
@@ -272,6 +411,27 @@ function PrestamoRow({ reporte, material, onDevolver, onCancelar }) {
 				<EstadoBadge estado={reporte.estado} />
 			</td>
 			<td className="py-3 pl-4">
+				{solicitado && reporte.prestamoId && (
+					<div className="flex flex-col items-end gap-2">
+						<Button
+							size="sm"
+							aria-label={`Aprobar el préstamo de «${reporte.materialTitulo}»`}
+							onClick={() => onAprobar(reporte)}
+						>
+							<CheckCircle aria-hidden="true" className="size-4" />
+							Aprobar
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							aria-label={`Rechazar la solicitud de «${reporte.materialTitulo}»`}
+							onClick={() => onRechazar(reporte)}
+						>
+							<Prohibit aria-hidden="true" className="size-4" />
+							Rechazar
+						</Button>
+					</div>
+				)}
 				{abierto && reporte.prestamoId && (
 					<div className="flex flex-col items-end gap-2">
 						<Button
@@ -306,6 +466,8 @@ function Prestamos() {
 	const [error, setError] = useState("");
 	const [estado, setEstado] = useState("");
 	const [busqueda, setBusqueda] = useState("");
+	const [aprobacion, setAprobacion] = useState(null);
+	const [rechazo, setRechazo] = useState(null);
 	const [devolucion, setDevolucion] = useState(null);
 	const [cancelacion, setCancelacion] = useState(null);
 
@@ -328,14 +490,27 @@ function Prestamos() {
 		cargar();
 	}, [cargar]);
 
+	// Una solicitud nueva (o una cancelación del lector) llega por la campana: la tabla se
+	// recarga sola para que el bibliotecario la vea sin refrescar la página
+	useEffect(() => {
+		function alNotificar(event) {
+			if (event.detail?.categoria === "prestamos") cargar();
+		}
+
+		window.addEventListener("bibliotk:notificacion", alNotificar);
+		return () => window.removeEventListener("bibliotk:notificacion", alNotificar);
+	}, [cargar]);
+
 	function reintentar() {
 		setStatus("loading");
 		setError("");
 		cargar();
 	}
 
-	// Tras devolver o cancelar, la fila se reemplaza por la que devolvió el backend
+	// Tras aprobar, rechazar, devolver o cancelar, la fila se reemplaza por la que devolvió el backend
 	function handleActualizado(actualizado) {
+		setAprobacion(null);
+		setRechazo(null);
 		setDevolucion(null);
 		setCancelacion(null);
 		setReportes((actuales) =>
@@ -345,19 +520,24 @@ function Prestamos() {
 
 	const resumen = resumir(reportes);
 	const texto = normalizar(busqueda.trim());
-	const visibles = reportes.filter(
-		(reporte) =>
-			(!estado || reporte.estado === estado) &&
-			(!texto ||
-				[
-					reporte.usuarioNombre,
-					reporte.usuarioEmail,
-					reporte.usuarioCc,
-					reporte.materialTitulo,
-					reporte.materialAutor,
-					reporte.materialIsbn,
-				].some((campo) => normalizar(campo).includes(texto))),
-	);
+	const visibles = reportes
+		.filter(
+			(reporte) =>
+				(!estado || reporte.estado === estado) &&
+				(!texto ||
+					[
+						reporte.usuarioNombre,
+						reporte.usuarioEmail,
+						reporte.usuarioCc,
+						reporte.materialTitulo,
+						reporte.materialAutor,
+						reporte.materialIsbn,
+					].some((campo) => normalizar(campo).includes(texto))),
+		)
+		// Las solicitudes por aprobar, arriba (sort es estable: el resto conserva su orden)
+		.sort(
+			(a, b) => Number(b.estado === "SOLICITADO") - Number(a.estado === "SOLICITADO"),
+		);
 
 	return (
 		<>
@@ -367,8 +547,8 @@ function Prestamos() {
 						Préstamos
 					</h1>
 					<p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-						Todos los préstamos hechos por los usuarios, con los datos del lector
-						y del material.
+						Aprueba las solicitudes de los lectores y lleva el control de los
+						préstamos, con los datos del lector y del material.
 					</p>
 				</div>
 				<Link to="/reportes" className={buttonClasses({ variant: "outline" })}>
@@ -425,6 +605,19 @@ function Prestamos() {
 						</div>
 					) : (
 						<>
+							{resumen.solicitados > 0 && estado !== "SOLICITADO" && (
+								<div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-honey-100 p-4 text-honey-700 shadow-[inset_0_0_0_1px_rgb(168_112_44/0.2)]">
+									<p className="flex items-center gap-3 text-[15px] font-semibold leading-snug">
+										<HourglassMedium aria-hidden="true" className="size-5 shrink-0" />
+										{resumen.solicitados === 1
+											? "Hay 1 solicitud esperando tu aprobación."
+											: `Hay ${resumen.solicitados} solicitudes esperando tu aprobación.`}
+									</p>
+									<Button size="sm" onClick={() => setEstado("SOLICITADO")}>
+										Ver solicitudes
+									</Button>
+								</div>
+							)}
 							<div className="flex flex-wrap items-end justify-between gap-4">
 								<fieldset className="flex flex-wrap gap-2">
 									<legend className="sr-only">Estado del préstamo</legend>
@@ -493,6 +686,8 @@ function Prestamos() {
 													key={reporte.id}
 													reporte={reporte}
 													material={portadas.get(reporte.materialId)}
+													onAprobar={setAprobacion}
+													onRechazar={setRechazo}
 													onDevolver={setDevolucion}
 													onCancelar={setCancelacion}
 												/>
@@ -504,6 +699,24 @@ function Prestamos() {
 						</>
 					)}
 				</section>
+			)}
+
+			{aprobacion && (
+				<AprobacionDialog
+					key={aprobacion.id}
+					reporte={aprobacion}
+					onClose={() => setAprobacion(null)}
+					onAprobado={handleActualizado}
+				/>
+			)}
+
+			{rechazo && (
+				<RechazoDialog
+					key={rechazo.id}
+					reporte={rechazo}
+					onClose={() => setRechazo(null)}
+					onRechazado={handleActualizado}
+				/>
 			)}
 
 			{devolucion && (

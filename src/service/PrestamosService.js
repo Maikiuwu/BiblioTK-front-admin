@@ -62,6 +62,30 @@ export async function devolverPrestamo(prestamoId, observaciones) {
 	return data.prestamo;
 }
 
+// Aprueba una solicitud (SOLICITADO → ACTIVO): desde ahora corren los días del préstamo
+export async function aprobarPrestamo(prestamoId) {
+	const data = await requestPrestamos(
+		`/Prestamos/${prestamoId}/aprobacion`,
+		{ method: "PUT" },
+		"No se pudo aprobar la solicitud.",
+	);
+	return data.prestamo;
+}
+
+// Rechaza una solicitud sin aprobar; el motivo es opcional y le llega al lector
+export async function rechazarPrestamo(prestamoId, motivo) {
+	const data = await requestPrestamos(
+		`/Prestamos/${prestamoId}/rechazo`,
+		{
+			method: "PUT",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ motivo }),
+		},
+		"No se pudo rechazar la solicitud.",
+	);
+	return data.prestamo;
+}
+
 // Cancela el préstamo de cualquier usuario (ACTIVO o VENCIDO); el motivo es opcional
 export async function cancelarPrestamo(prestamoId, motivo) {
 	const data = await requestPrestamos(

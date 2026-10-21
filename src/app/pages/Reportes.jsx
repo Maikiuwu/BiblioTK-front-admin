@@ -20,25 +20,31 @@ const cardClasses =
 
 const opcionesEstado = [
 	{ valor: "", etiqueta: "Todos los estados" },
+	{ valor: "SOLICITADO", etiqueta: "Por aprobar" },
 	{ valor: "ACTIVO", etiqueta: "Activos" },
 	{ valor: "VENCIDO", etiqueta: "Vencidos" },
 	{ valor: "DEVUELTO", etiqueta: "Devueltos" },
 	{ valor: "CANCELADO", etiqueta: "Cancelados" },
+	{ valor: "RECHAZADO", etiqueta: "Rechazados" },
 ];
 
 const etiquetasEstado = {
+	SOLICITADO: "Por aprobar",
 	ACTIVO: "Activo",
 	VENCIDO: "Vencido",
 	DEVUELTO: "Devuelto",
 	CANCELADO: "Cancelado",
+	RECHAZADO: "Rechazado",
 };
 
 const tarjetasResumen = [
 	{ clave: "total", etiqueta: "Total", clase: "text-pine-950" },
+	{ clave: "solicitados", etiqueta: "Por aprobar", clase: "text-honey-700" },
 	{ clave: "activos", etiqueta: "Activos", clase: "text-pine-700" },
 	{ clave: "vencidos", etiqueta: "Vencidos", clase: "text-clay-600" },
 	{ clave: "devueltos", etiqueta: "Devueltos", clase: "text-ink-soft" },
-	{ clave: "cancelados", etiqueta: "Cancelados", clase: "text-honey-700" },
+	{ clave: "cancelados", etiqueta: "Cancelados", clase: "text-ink-soft" },
+	{ clave: "rechazados", etiqueta: "Rechazados", clase: "text-clay-600" },
 ];
 
 const filasVistaPrevia = 5;
@@ -169,7 +175,7 @@ export function Reportes() {
 					"mt-3 p-6 motion-safe:animate-rise [animation-delay:140ms] md:p-8",
 				)}
 			>
-				<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+				<div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
 					{tarjetasResumen.map((tarjeta) => (
 						<div key={tarjeta.clave} className="rounded-2xl bg-sand-100 px-4 py-3">
 							<p className="text-[13px] text-ink-soft">{tarjeta.etiqueta}</p>

@@ -353,12 +353,10 @@ function Profile({ onAccountDeleted }) {
 								name="cc"
 								label="Cédula de identidad"
 								type="text"
-								inputMode="numeric"
-								autoComplete="off"
-								required
+								readOnly
+								hint="No se puede cambiar. Si tiene un error, acércate a la biblioteca."
+								inputClassName="cursor-default bg-sand-100 text-ink-soft"
 								value={formData.cc}
-								onChange={handleChange}
-								error={errorFor("cc")}
 							/>
 							<TextField
 								id="celular"

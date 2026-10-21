@@ -20,7 +20,7 @@ src/
       App.jsx         # Rutas (secciones con React.lazy), guarda de sesión, PanelLayout (Resumen, Materiales, Préstamos, Reportes, Mi perfil)
       Home.jsx         # /HomeAdmin — Material bibliográfico, Préstamos, Mi perfil (un solo botón) y Reportes
       Materiales.jsx   # /materiales — tabla con miniaturas + alta/edición (con portada)/borrado
-      Prestamos.jsx    # /prestamos — tabla de todos los préstamos (tabla reportes), filtros y "Marcar devuelto"
+      Prestamos.jsx    # /prestamos — solicitudes por aprobar arriba, tabla de todos los préstamos (tabla reportes), filtros, "Aprobar"/"Rechazar", "Marcar devuelto" y "Cancelar"
       Reportes.jsx     # /reportes — filtros (estado, fechas), resumen, vista previa y "Descargar PDF" (export con nombre: `Reportes`)
       Profile.jsx      # /perfil — "Editar mis datos" + "Eliminar mi cuenta" (copia de la del lector)
     styles/globals.css         # Hoja única (se enlaza desde index.html)
@@ -31,7 +31,7 @@ src/
     LoginService.js       # getCurrentSession, esSesionDeEstaApp, logoutUser → :3001
     NotificacionesService.js # conectarNotificaciones → :3006 (Socket.IO)
     MaterialesService.js   # listMateriales, getMaterial, createMaterial, updateMaterial, deleteMaterial → :3003
-    PrestamosService.js    # listReportes, devolverPrestamo, downloadReportePdf → :3005
+    PrestamosService.js    # listReportes, aprobarPrestamo, rechazarPrestamo, devolverPrestamo, cancelarPrestamo, downloadReportePdf → :3005
     ProfileService.js      # getProfile, updateProfile, deleteAccount → :3002
 ```
 
@@ -39,7 +39,10 @@ Variables opcionales (`.env.local`): `VITE_PORT`, `VITE_NOTIFICACIONES_URL`, `VI
 
 ## Préstamos y reportes
 
-- **Préstamos** (botón del inicio): la tabla con todos los préstamos hechos, con los datos del lector y del material que guarda la tabla `reportes`. Filtros por estado (con contadores) y búsqueda sin tildes; "Marcar devuelto" abre un diálogo con observaciones opcionales y el material vuelve a estar disponible.
+- **Préstamos** (botón del inicio): la tabla con todos los préstamos hechos, con los datos del lector y del material que guarda la tabla `reportes`. Filtros por estado (con contadores, incluido "Por aprobar") y búsqueda sin tildes.
+- **Solicitudes:** el lector solo deja la solicitud (`SOLICITADO`); van primero en la tabla, resaltadas, con un aviso "Hay N solicitudes esperando tu aprobación". "Aprobar" la vuelve un préstamo `ACTIVO` (el lector recibe el aviso con el lugar de recogida y desde ahí corren los 15 días); "Rechazar" pide un motivo opcional que le llega al lector y el material vuelve al catálogo.
+- "Marcar devuelto" (préstamos aprobados o vencidos) abre un diálogo con observaciones opcionales y el material vuelve a estar disponible.
+- La tabla se recarga sola cuando llega una notificación de préstamos (el hook `useNotificaciones` dispara el evento `bibliotk:notificacion` en `window`).
 - **Reportes** (botón del inicio): exporta el PDF que genera `PrestamosBiblioTK` (`GET /Reportes/pdf`) con los filtros elegidos. Con rango de fechas inválido o sin resultados el botón queda deshabilitado.
 
 ## Material bibliográfico
@@ -48,7 +51,7 @@ El formulario se monta con `key` en cada apertura (sin efectos de reinicio). La 
 
 ## Perfil
 
-Mismo esquema que el lector: un solo botón "Editar perfil" en el inicio y, dentro de `/perfil`, editar datos o eliminar la cuenta. El backend solo deja eliminarla si queda otro bibliotecario.
+Mismo esquema que el lector: un solo botón "Editar perfil" en el inicio y, dentro de `/perfil`, editar datos o eliminar la cuenta. La cédula se muestra de solo lectura: no se puede cambiar (no viaja en el DTO ni se valida). El backend solo deja eliminarla si queda otro bibliotecario.
 
 ## Notificaciones en tiempo real
 

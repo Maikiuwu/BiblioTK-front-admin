@@ -52,6 +52,11 @@ export function useNotificaciones(activa, alCortarlo) {
 					].slice(0, MAX_NOTIFICACIONES),
 				);
 				setAvisos((lista) => [...lista, notificacion].slice(-MAX_AVISOS));
+				// Las páginas que muestran esos datos (por ejemplo Préstamos) escuchan este evento
+				// para recargarse solas
+				window.dispatchEvent(
+					new CustomEvent("bibliotk:notificacion", { detail: notificacion }),
+				);
 			},
 			alCortarlo,
 		});

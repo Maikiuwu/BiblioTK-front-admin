@@ -1,5 +1,6 @@
 // Mismas reglas del perfil que BiblioTK-front-user (allá con Zod) y que PerfilBiblioTK,
-// escritas sin dependencias: esta app no necesita Zod para nada más
+// escritas sin dependencias: esta app no necesita Zod para nada más. La cédula no está: se
+// muestra en el perfil, pero no se puede cambiar
 const letters = "A-Za-zÁÉÍÓÚÜÑáéíóúüñ";
 const nameRegex = new RegExp(`^[${letters}]+(?:[ '-][${letters}]+)*$`);
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -9,7 +10,6 @@ const fieldLimits = {
 	nombres: 50,
 	apellidos: 50,
 	email: 100,
-	cc: 15,
 	nombreUsuario: 30,
 };
 
@@ -24,11 +24,6 @@ const rules = [
 		test: (value) => nameRegex.test(value) && value.length <= fieldLimits.apellidos,
 		message:
 			"Los apellidos solo pueden contener letras, espacios, apóstrofes o guiones.",
-	},
-	{
-		field: "cc",
-		test: (value) => /^[1-9]\d*$/.test(value) && value.length <= fieldLimits.cc,
-		message: `La cédula debe ser un número entero mayor que 0, de hasta ${fieldLimits.cc} dígitos.`,
 	},
 	{
 		field: "email",
